@@ -1,0 +1,27 @@
+{
+  "profiles": {
+    "fast": {
+      "model": "REPLACE_WITH_FAST_FREE_MODEL",
+      "fallbacks": ["quality", "fallback"]
+    },
+    "quality": {
+      "model": "REPLACE_WITH_QUALITY_FREE_MODEL",
+      "fallbacks": ["fallback", "fast"]
+    },
+    "fallback": {
+      "model": "REPLACE_WITH_SECOND_FREE_MODEL",
+      "fallbacks": ["fast"]
+    }
+  },
+  "tasks": {
+    "scrape": "fast",
+    "extract": "fast",
+    "deduplicate": "fast",
+    "rank": "quality",
+    "general": "quality",
+    "write_cv": "quality",
+    "write_letter": "quality",
+    "review": "quality"
+  }
+}
+
