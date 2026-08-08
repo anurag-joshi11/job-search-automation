@@ -64,7 +64,15 @@ Set `OMNIROUTE_API_KEY` in `.env` if your OmniRoute instance requires a key. The
 
 ### 3. Configure model profiles
 
-The default profiles use OmniRoute's automatic routes: `auto/fast`, `auto/coding`, and `auto`. These can work with free/no-key backends available to your OmniRoute installation. If you connect specific providers, you can replace these with model IDs shown in the dashboard. Keep the profile names stable; the router uses them by task.
+The default profiles use the free models currently exposed by OmniRoute:
+
+| Profile | Model | Used for | Fallback order |
+|---|---|---|---|
+| `fast` | `oc/mimo-v2.5-free` | extraction, deduplication, scraping | quality → fallback |
+| `quality` | `oc/deepseek-v4-flash-free` | ranking, CV/letter drafts, review | fallback → fast |
+| `fallback` | `oc/nemotron-3-ultra-free` | recovery when the primary route fails | fast |
+
+These model IDs are verified through the local OmniRoute `/v1/models` endpoint. Providers can change availability, so replace them with current IDs from the dashboard if necessary.
 
 ### 4. Check connectivity
 

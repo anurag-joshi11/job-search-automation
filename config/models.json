@@ -1,15 +1,15 @@
 {
   "profiles": {
     "fast": {
-      "model": "auto/fast",
+      "model": "oc/mimo-v2.5-free",
       "fallbacks": ["quality", "fallback"]
     },
     "quality": {
-      "model": "auto/coding",
+      "model": "oc/deepseek-v4-flash-free",
       "fallbacks": ["fallback", "fast"]
     },
     "fallback": {
-      "model": "auto",
+      "model": "oc/nemotron-3-ultra-free",
       "fallbacks": ["fast"]
     }
   },

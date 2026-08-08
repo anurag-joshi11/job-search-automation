@@ -38,6 +38,9 @@ class AnthropicGateway:
         headers = {
             "Content-Type": "application/json",
             "anthropic-version": "2023-06-01",
+            # Some free web-backed OmniRoute providers reject urllib's
+            # default Python user agent and return a misleading 403 quota error.
+            "User-Agent": "Mozilla/5.0 (compatible; JobSearchAutomation/0.1)",
         }
         if self.api_key:
             headers["x-api-key"] = self.api_key
