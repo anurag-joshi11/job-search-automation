@@ -1,15 +1,15 @@
 {
   "profiles": {
     "fast": {
-      "model": "REPLACE_WITH_FAST_FREE_MODEL",
+      "model": "auto/fast",
       "fallbacks": ["quality", "fallback"]
     },
     "quality": {
-      "model": "REPLACE_WITH_QUALITY_FREE_MODEL",
+      "model": "auto/coding",
       "fallbacks": ["fallback", "fast"]
     },
     "fallback": {
-      "model": "REPLACE_WITH_SECOND_FREE_MODEL",
+      "model": "auto",
       "fallbacks": ["fast"]
     }
   },
@@ -24,4 +24,3 @@
     "review": "quality"
   }
 }
-

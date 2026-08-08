@@ -64,7 +64,7 @@ Set `OMNIROUTE_API_KEY` in `.env` if your OmniRoute instance requires a key. The
 
 ### 3. Configure model profiles
 
-Edit [`config/models.json`](config/models.json) and replace the example model IDs with IDs enabled in your OmniRoute dashboard. Keep the profile names stable; the router uses them by task.
+The default profiles use OmniRoute's automatic routes: `auto/fast`, `auto/coding`, and `auto`. These can work with free/no-key backends available to your OmniRoute installation. If you connect specific providers, you can replace these with model IDs shown in the dashboard. Keep the profile names stable; the router uses them by task.
 
 ### 4. Check connectivity
 
