@@ -72,6 +72,8 @@ The default profiles use OmniRoute's automatic routes: `auto/fast`, `auto/coding
 free-job-search health
 ```
 
+The health command checks OmniRoute's unauthenticated `/api/init` readiness endpoint; OmniRoute's `/health` endpoint may require management authentication.
+
 ### 5. Rank a job description
 
 ```powershell

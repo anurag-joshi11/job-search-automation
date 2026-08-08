@@ -19,7 +19,9 @@ class AnthropicGateway:
     timeout_seconds: int = 90
 
     def health(self) -> tuple[int, str]:
-        request = urllib.request.Request(f"{self.base_url}/health", method="GET")
+        # Current OmniRoute builds may protect /health with management auth.
+        # /api/init is an unauthenticated readiness check for local clients.
+        request = urllib.request.Request(f"{self.base_url}/api/init", method="GET")
         try:
             with urllib.request.urlopen(request, timeout=self.timeout_seconds) as response:
                 return response.status, response.read().decode("utf-8", errors="replace")
