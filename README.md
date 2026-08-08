@@ -1,4 +1,4 @@
-# Free AI Job Search
+# Job Search Automation
 
 A local-first, provider-agnostic job-search assistant that can use free-tier models through [OmniRoute](https://github.com/diegosouzapw/OmniRoute). It is designed to complement the MIT-licensed [ai-job-search](https://github.com/MadsLorentzen/ai-job-search) workflow without bundling OmniRoute or copying its source code.
 
@@ -150,4 +150,3 @@ python -m compileall src
 4. Add Claude Code skill wrappers that call the same router.
 5. Add a local dashboard and scheduled scrape command.
 6. Add model evaluation fixtures so routing decisions are measurable.
-

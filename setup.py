@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 
 setup(
-    name="free-ai-job-search",
+    name="job-search-automation",
     version="0.1.0",
     description="Local-first job-search orchestration with OmniRoute model routing and fallbacks",
     long_description=open("README.md", encoding="utf-8").read(),
