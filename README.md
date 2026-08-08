@@ -1,8 +1,57 @@
 # Job Search Automation
 
-A local-first, provider-agnostic job-search assistant that can use free-tier models through [OmniRoute](https://github.com/diegosouzapw/OmniRoute). It is designed to complement the MIT-licensed [ai-job-search](https://github.com/MadsLorentzen/ai-job-search) workflow without bundling OmniRoute or copying its source code.
+A local-first job-search workspace that combines the MIT-licensed [ai-job-search](https://github.com/MadsLorentzen/ai-job-search) Claude Code workflow with OmniRoute free-model routing. OmniRoute remains an external local service; its source is not bundled here.
 
-> Status: MVP scaffold. The routing, fallback, memory, and validation layers are implemented. Portal-specific scraping and automatic application submission are intentionally out of scope until they can be tested safely.
+> Status: Integrated workflow. The upstream Claude Code commands and portal skills are included; application submission remains manual by design.
+
+## End-to-end workflow
+
+Start OmniRoute in one terminal:
+
+```cmd
+omniroute serve
+```
+
+From this repository, launch Claude Code through a free OmniRoute route:
+
+```cmd
+scripts\run-claude.cmd
+```
+
+The default profile is `auto-best-coding`. Other useful profiles are `auto-best-fast` for scraping/ranking and `auto-best-free` for a broad free fallback pool:
+
+```cmd
+scripts\run-claude-fast.cmd
+scripts\run-claude-free.cmd
+```
+
+All three wrappers accept normal Claude Code arguments, for example `-p "..."`.
+
+Inside Claude Code, run:
+
+```text
+/setup
+/scrape
+/rank
+/apply <job-url>
+/interview
+/outcome
+/html-report
+```
+
+Use `/setup` first. It populates the candidate profile and search preferences. `/scrape` finds jobs through the included portal skills, `/rank` creates a shortlist, and `/apply` creates the tailored CV and cover letter. Review everything and submit applications yourself.
+
+## Which model does what?
+
+Claude Code workflow routing uses OmniRoute's tested dynamic profiles:
+
+| Workflow | Profile | Routing behavior |
+|---|---|---|
+| `/scrape`, `/rank` | `auto-best-fast` | prioritizes responsive free backends |
+| `/apply`, `/interview` | `auto-best-coding` | prioritizes capable tool/reasoning backends |
+| emergency fallback | `auto-best-free` | broad free-model pool |
+
+The Python CLI in `src/` keeps an explicit fallback mapping for non-Claude-Code requests. The Claude Code profiles are generated under `~/.claude/profiles/` by OmniRoute and are separate from the repository.
 
 ## What this project does
 
@@ -11,22 +60,31 @@ A local-first, provider-agnostic job-search assistant that can use free-tier mod
 - Retries transient failures and tries configured fallback models.
 - Stores prompts, responses, and task summaries locally as JSONL/Markdown.
 - Keeps the project state independent from any one model or Claude Code profile.
-- Provides a small CLI that can rank a saved job description and run a chat task.
+- Includes the full Claude Code command and portal-skill workflow from the upstream project.
+- Provides an additional Python CLI for direct ranking/chat and routing tests.
 
 ## Architecture
 
 ```text
-CLI / future Claude Code skills
+Claude Code CLI
         |
         v
-Task router -> memory/context loader -> output validator
+.claude commands + .agents portal skills
         |
         v
 OmniRoute (external local service, http://localhost:20128)
         |
-        +--> fast free model
-        +--> quality free model
-        +--> fallback free model
+        +--> auto-best-fast
+        +--> auto-best-coding
+        +--> auto-best-free fallback
+
+Direct Python CLI
+        |
+        v
+Explicit model router + local memory + validators
+        |
+        v
+OmniRoute Anthropic-compatible API
 ```
 
 OmniRoute remains outside this repository. Install and run it separately, then configure this project to use its local endpoint. This keeps the project small and lets OmniRoute evolve independently.
@@ -34,10 +92,13 @@ OmniRoute remains outside this repository. Install and run it separately, then c
 ## Requirements
 
 - Python 3.10+
+- Node.js and Claude Code CLI
+- Bun (used by the included portal search tools)
 - OmniRoute running locally
-- At least one provider/model configured in OmniRoute
+- LaTeX (`lualatex` and `xelatex`) for `/apply`
+- Optional: `pdftotext` for ATS checks
 
-Optional dependencies for the larger job-search workflow include Bun, LaTeX, and `pdftotext`; those will be added when portal adapters and document generation are integrated.
+The original project is designed for Claude Code. OmniRoute supplies the model endpoint; it does not replace Claude Code's local command/skill runtime.
 
 ## Quick start
 
@@ -45,11 +106,10 @@ Optional dependencies for the larger job-search workflow include Bun, LaTeX, and
 
 ```powershell
 npm install -g omniroute
-omniroute setup
-omniroute
+omniroute serve
 ```
 
-Configure at least one provider in the OmniRoute dashboard. The gateway normally listens on `http://localhost:20128`.
+If the setup wizard asks for an Anthropic key, cancel it. The repository's tested `auto-best-*` routes use the available free backends. The gateway normally listens on `http://localhost:20128`.
 
 ### 2. Create a Python environment
 
@@ -62,7 +122,17 @@ Copy-Item .env.example .env
 
 Set `OMNIROUTE_API_KEY` in `.env` if your OmniRoute instance requires a key. The default local development setup may accept a blank key, depending on OmniRoute configuration.
 
-### 3. Configure model profiles
+### 3. Configure Claude Code profiles
+
+Generate the local Claude Code profiles from OmniRoute:
+
+```cmd
+omniroute setup-claude --only auto
+```
+
+The repository launcher uses `auto-best-coding` by default and routes Claude Code through OmniRoute.
+
+### 4. Configure model profiles for the direct Python CLI
 
 The default profiles use the free models currently exposed by OmniRoute:
 
@@ -74,7 +144,7 @@ The default profiles use the free models currently exposed by OmniRoute:
 
 These model IDs are verified through the local OmniRoute `/v1/models` endpoint. Providers can change availability, so replace them with current IDs from the dashboard if necessary.
 
-### 4. Check connectivity
+### 5. Check connectivity
 
 ```powershell
 free-job-search health
@@ -82,7 +152,7 @@ free-job-search health
 
 The health command checks OmniRoute's unauthenticated `/api/init` readiness endpoint; OmniRoute's `/health` endpoint may require management authentication.
 
-### 5. Rank a job description
+### 6. Rank a job description
 
 ```powershell
 free-job-search rank --job examples/job-description.txt
@@ -90,7 +160,7 @@ free-job-search rank --job examples/job-description.txt
 
 The result is saved under `data/runs/`, and the request/response is recorded in `data/conversations/`.
 
-### 6. Run a persistent local chat task
+### 7. Run a persistent local chat task
 
 ```powershell
 free-job-search chat --task general
@@ -138,12 +208,12 @@ The important workflow state is reconstructed from these files when a new model 
 
 ## Relationship to upstream projects
 
-This project is an integration/orchestration layer, not a replacement claim for either upstream project. It is intended to work alongside:
+This project is an integration/orchestration layer and a prepared workspace built from the upstream workflow. It includes adapted/upstream files under `.claude`, `.agents`, `cv`, `cover_letters`, `documents`, `job_scraper`, and related folders. It does not bundle OmniRoute; OmniRoute remains a separate local service.
 
-- [MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search) for the broader job-search workflow and document conventions.
+- [MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search) for the original workflow and portal/document conventions.
 - [diegosouzapw/OmniRoute](https://github.com/diegosouzapw/OmniRoute) as an external local AI gateway.
 
-Both upstream projects are MIT-licensed. Preserve their license notices when distributing copied or substantially derived code. This repository currently does not bundle their source.
+Both upstream projects are MIT-licensed. The upstream notice is preserved in `LICENSE.ai-job-search`; preserve it when redistributing the included workflow files.
 
 ## Development
 
@@ -152,11 +222,10 @@ python -m pytest
 python -m compileall src
 ```
 
-## Roadmap
+## Remaining work
 
-1. Add portal adapters with rate limiting and deduplication.
-2. Add structured ranking schemas and deterministic profile checks.
-3. Add CV/cover-letter generation with PDF/ATS validation.
-4. Add Claude Code skill wrappers that call the same router.
-5. Add a local dashboard and scheduled scrape command.
-6. Add model evaluation fixtures so routing decisions are measurable.
+1. Install local prerequisites (Bun and LaTeX) if they are not already installed.
+2. Run `/setup` and populate the private candidate/application files.
+3. Add local portal search queries and test `/scrape`.
+4. Add scheduled scraping only after manual runs are reliable.
+5. Add model evaluation fixtures and latency reporting.
